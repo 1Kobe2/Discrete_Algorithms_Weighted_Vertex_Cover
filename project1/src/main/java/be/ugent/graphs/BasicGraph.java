@@ -20,7 +20,7 @@ public class BasicGraph {
 
     protected BitSet[] adjacencyList;
     protected int numVertices;
-    protected List<Double> weights;
+    protected List<Integer> weights;
 
     public BasicGraph(BasicGraph graph) {
         this.adjacencyList = graph.adjacencyList;
@@ -28,7 +28,7 @@ public class BasicGraph {
         this.weights = graph.weights;
     }
 
-    public BasicGraph(BitSet[] adjacencyList, List<Double> weights) {
+    public BasicGraph(BitSet[] adjacencyList, List<Integer> weights) {
         this.adjacencyList = adjacencyList;
         this.numVertices = adjacencyList.length;
         this.weights = weights;
@@ -81,6 +81,7 @@ public class BasicGraph {
                     logger.error("Exiting...");
                     System.exit(1);
                 }
+                weights = new ArrayList<>(Collections.nCopies(numVertices, 1));
             } catch (IOException e) {
                 logger.error("Error reading file: {}", e.getMessage());
                 logger.error("Exiting...");
@@ -174,7 +175,7 @@ public class BasicGraph {
     }
 
     // Method that returns the weight of a vertex
-    public double weight(int vertex) {
+    public int weight(int vertex) {
         return weights.get(vertex);
     }
 
@@ -206,7 +207,7 @@ public class BasicGraph {
     // Reorders the vertices of the graph in the order given by the List parameter
     public void reorderVertices(List<Integer> vertices) {
         BitSet[] newAdjacencyList = new BitSet[vertices.size()];
-        List<Double> weights = new ArrayList<>();
+        List<Integer> weights = new ArrayList<>();
         for (int i = 0; i < vertices.size(); i++) {
             newAdjacencyList[i] = new BitSet(vertices.size());
         }
@@ -227,6 +228,44 @@ public class BasicGraph {
 
     public boolean isAdjacent(int i, int j) {
         return adjacencyList[i].get(j);
+    }
+
+
+    /**
+     * Set the weights of the vertices to random values between minWeight and maxWeight
+     *
+     * @param seed      Random seed
+     * @param minWeight Lower bound for the random weights (inclusive)
+     * @param maxWeight Upper bound for the random weights (inclusive)
+     */
+    public void setRandomWeights(int seed, int minWeight, int maxWeight) {
+        Random random = new Random(seed);
+        for (int i = 0; i < numVertices; i++) {
+            this.weights.set(i, random.nextInt(maxWeight - minWeight + 1) + minWeight);
+        }
+    }
+
+    /**
+     * Set the weights of the vertices to random values between 1 and 200
+     *
+     * @param seed Random seed
+     */
+    public void setRandomWeights(int seed) {
+        setRandomWeights(seed, 1, 200);
+    }
+
+    /**
+     * Get the weight of a vertex
+     *
+     * @param vertexSet BitSet representing multiple vertices
+     * @return Weight of the vertex
+     */
+    public int getWeight(BitSet vertexSet) {
+        int weight = 0;
+        for (int i = vertexSet.nextSetBit(0); i >= 0; i = vertexSet.nextSetBit(i + 1)) {
+            weight += weights.get(i);
+        }
+        return weight;
     }
 
     public static void main(String[] args) {
