@@ -1,0 +1,5 @@
+*.log
+
+.idea
+/project1/build/
+/project1/.gradle/
