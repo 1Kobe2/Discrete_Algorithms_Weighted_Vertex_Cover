@@ -6,6 +6,8 @@ import be.ugent.graphs.BasicGraph;
 import java.util.BitSet;
 
 public class DLSWCC implements WeightedVertexCoverAlgorithm {
+    private final int maxIterations;
+
     private BitSet wConfig;
     private int[][] edgeWeights;
     private int[] vertexScores;
@@ -14,8 +16,15 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
     private BitSet currentCover;
     private int upperBound;
     private int iteration;
-    private final int maxIterations = 1000000;
     private BitSet tabuList;
+
+    public DLSWCC(int maxIterations) {
+        this.maxIterations = maxIterations;
+    }
+
+    public DLSWCC() {
+        this.maxIterations = 1000000;
+    }
 
     @Override
     public BitSet calculateMinVertexCover(BasicGraph graph, IntermediateSolutionReporter intermediateSolutionReporter) {
@@ -32,11 +41,13 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
                 updateUpperBound(graph);
                 minimumVertexCover = (BitSet) currentCover.clone();
                 int id = nextVertex();
+                updateScores(id, graph);
                 currentCover.clear(id);
                 wConfig.clear(id);
                 updateWConfig(id, graph);
             }
             int id = nextVertexTabu();
+            updateScores(id, graph);
             currentCover.clear(id);
             wConfig.clear(id);
             updateWConfig(id, graph);
@@ -46,6 +57,7 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
                 if (currentWeight(graph) + graph.weight(id) >= upperBound) {
                     break;
                 }
+                updateScores(id, graph);
                 currentCover.set(id);
                 updateWConfig(id, graph);
                 updateEdgeWeights(graph);
@@ -174,5 +186,20 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
                 }
             }
         }
+    }
+
+    private void updateScores(int id, BasicGraph graph) {
+        vertexScores[id] = -vertexScores[id];
+        BitSet adjacentVertices = graph.getAdjacencyBitSet(id);
+        int i = adjacentVertices.nextSetBit(0);
+        while (i != -1) {
+            int add = edgeWeights[i][id] / graph.weight(i);
+            if (currentCover.get(i) ^ currentCover.get(id)) {
+                add = -add;
+            }
+            vertexScores[i] += add;
+            i = adjacentVertices.nextSetBit(i + 1);
+        }
+        vertexAges[id] = iteration;
     }
 }
