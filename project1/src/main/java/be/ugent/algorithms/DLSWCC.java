@@ -10,7 +10,7 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
 
     private BitSet wConfig;
     private int[][] edgeWeights;
-    private int[] vertexScores;
+    private double[] vertexScores;
     private int[] vertexAges;
     private BitSet minimumVertexCover;
     private BitSet currentCover;
@@ -83,7 +83,7 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
     }
 
     private void initializeVertexScores(BasicGraph graph) {
-        vertexScores = new int[graph.getNumVertices()];
+        vertexScores = new double[graph.getNumVertices()];
         for (int i = 0; i < graph.getNumVertices(); i++) {
             vertexScores[i] = graph.degree(i);
         }
@@ -193,7 +193,7 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         BitSet adjacentVertices = graph.getAdjacencyBitSet(id);
         int i = adjacentVertices.nextSetBit(0);
         while (i != -1) {
-            int add = edgeWeights[i][id] / graph.weight(i);
+            double add = edgeWeights[i][id] / (double) graph.weight(i);
             if (currentCover.get(i) ^ currentCover.get(id)) {
                 add = -add;
             }
