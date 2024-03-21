@@ -36,17 +36,22 @@ public class GraphGenerator {
                 100_000,
         };
         float[] edgeProbabilities = {
-                0.0001f, 0.0005f, 0.001f, 0.002f, 0.005f,
-                0.01f, 0.02f, 0.05f, 0.1f, 0.2f, 0.25f, 0.5f, 0.75f, 0.9f
+                0.000_000_01f, 0.000_000_05f,
+                0.000_000_1f, 0.000_000_5f,
+                0.000_001f, 0.000_005f,
+                0.000_01f, 0.000_05f,
+                0.0001f, 0.0005f,
+                0.001f, 0.005f,
+                0.01f, 0.05f,
+                0.1f, 0.5f,
         };
 
         for (int count : vertexCounts) {
-            int vertexCount = count;
             for (float edgeProbability : edgeProbabilities) {
-                float probability = edgeProbability / 100;
-                BasicGraph graph = generate(vertexCount, probability);
-                graph.exportToCWG("graph_" + vertexCount + "_" + probability + ".cwg");
-
+                if (count * edgeProbability >= 2) {
+                    BasicGraph graph = generate(count, edgeProbability);
+                    graph.exportToCWG("graph_" + count + "_" + edgeProbability + ".cwg");
+                }
             }
 
         }
