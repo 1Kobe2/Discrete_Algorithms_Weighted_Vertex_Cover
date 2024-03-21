@@ -3,11 +3,13 @@ package be.ugent.algorithms;
 import be.ugent.benchmark.IntermediateSolutionReporter;
 import be.ugent.graphs.BasicGraph;
 
+import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Collections;
+import java.util.List;
 
 public class DLSWCC implements WeightedVertexCoverAlgorithm {
     private final int maxIterations;
-
     private BitSet wConfig;
     private int[][] edgeWeights;
     private double[] vertexScores;
@@ -36,21 +38,24 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         initializeTabuList(graph);
         updateUpperBound(graph);
         iteration = 0;
+        int id;
         while (iteration < maxIterations) {
             while (graph.isVertexCover(currentCover)) {
                 updateUpperBound(graph);
                 minimumVertexCover = (BitSet) currentCover.clone();
-                int id = nextVertex();
+                id = nextVertex();
                 updateScores(id, graph);
                 currentCover.clear(id);
                 wConfig.clear(id);
                 updateWConfig(id, graph);
             }
-            int id = nextVertexTabu();
-            updateScores(id, graph);
-            currentCover.clear(id);
-            wConfig.clear(id);
-            updateWConfig(id, graph);
+            if (currentCover.cardinality() != 0) {
+                id = nextVertexTabu();
+                updateScores(id, graph);
+                currentCover.clear(id);
+                wConfig.clear(id);
+                updateWConfig(id, graph);
+            }
             tabuList.clear();
             while (!graph.isVertexCover(currentCover)) {
                 id = nextVertexWConfig();
@@ -95,7 +100,19 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
 
     private void initialMinimumVertexCover(BasicGraph graph) {
         minimumVertexCover = new BitSet(graph.getNumVertices());
-        //todo
+        List<Double> scores = new ArrayList<>();
+        for (double i : vertexScores) {
+            scores.add(i);
+        }
+        List<Double> indices = new ArrayList<>(scores);
+        scores.sort(Collections.reverseOrder(Double::compare));
+        int i = 0;
+        while (!graph.isVertexCover(minimumVertexCover)) {
+            int id = indices.indexOf(scores.get(i));
+            minimumVertexCover.set(id);
+            indices.set(id, null);
+            i++;
+        }
         currentCover = (BitSet) minimumVertexCover.clone();
     }
 
