@@ -1,0 +1,22 @@
+# https://github.com/SleekPanther/minimum-weighted-vertex-cover-approximation-algorithm/blob/master/README.md#graph-3
+
+[configuration]
+vertices 6
+edges 7
+
+[weights]
+2
+3
+4
+9
+7
+5
+
+[edges]
+0 1
+0 3
+1 2
+1 3
+2 4
+2 5
+3 4

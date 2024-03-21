@@ -1,6 +1,8 @@
 package be.ugent;
 
 import be.ugent.algorithms.BMWVC;
+import be.ugent.algorithms.FixedSetSearch;
+import be.ugent.algorithms.PricingMethod;
 import be.ugent.algorithms.WeightedVertexCoverAlgorithm;
 import be.ugent.benchmark.TestFileDatabase;
 import be.ugent.graphs.BasicGraph;
@@ -35,8 +37,9 @@ public class Benchmark {
     private static final int TEST_RUNS = 5;
 
     // Flags to enable or disable the different algorithms
-    private static final boolean RUN_BMWVC = true;
-    private static final boolean RUN_INEXACT_1 = false;
+    private static final boolean RUN_PRICING_METHOD = true;
+    private static final boolean RUN_BMWVC = false;
+    private static final boolean RUN_FIXED_SET_SEARCH = false;
     private static final boolean RUN_INEXACT_2 = false;
 
     // Maximum number of iterations for the inexact algorithms
@@ -50,7 +53,29 @@ public class Benchmark {
 
     // List of file paths to be tested
     private final String[] filePaths = {
-            "DIMACS_subset_ascii/brock200_2.clq", "DIMACS_subset_ascii/brock200_4.clq",
+            "customgraphs/triangle-4.cwg",
+            "customgraphs/graph_0_0.1.cwg",
+            "customgraphs/graph_10_0.1.cwg",
+            "customgraphs/graph_20_0.02.cwg",
+            "customgraphs/graph_40_0.02.cwg",
+            "customgraphs/graph_40_0.05.cwg",
+            "customgraphs/graph_100_0.01.cwg",
+            "customgraphs/graph_100_0.02.cwg",
+            "customgraphs/graph_100_0.05.cwg",
+            "customgraphs/graph_100_0.1.cwg",
+            "customgraphs/graph_100_0.15.cwg",
+            "customgraphs/graph_100_0.2.cwg",
+            "customgraphs/graph_100_0.25.cwg",
+            "customgraphs/graph_100_0.5.cwg",
+            "customgraphs/graph_100_0.75.cwg",
+            "customgraphs/graph_100_0.9.cwg",
+            "customgraphs/graph_100_0.95.cwg",
+            "customgraphs/graph_100_0.99.cwg",
+            "customgraphs/graph_500_0.01.cwg",
+            "customgraphs/graph_500_0.1.cwg",
+            "customgraphs/graph_500_0.5.cwg",
+            "customgraphs/graph_500_0.9.cwg",
+            "customgraphs/graph_100000_1.0E-4.cwg",
     };
 
     // Map to store the summary for each of the algorithms and files
@@ -60,15 +85,18 @@ public class Benchmark {
     public static void main(String[] args) {
         Benchmark benchmark = new Benchmark();
 
+        if (RUN_PRICING_METHOD) {
+            benchmark.algorithms.add((int maxVertexCoverSize, int maxIterations) -> new PricingMethod());
+        }
+
         if (RUN_BMWVC) {
             benchmark.algorithms.add((int maxVertexCoverSize, int maxIterations) -> new BMWVC());
         }
 
-        if (RUN_INEXACT_1) {
-            // TODO: Add first inexact algorithm
-            //      benchmark.algorithms.add(
-            //          (int maxVertexCoverSize, int maxIterations) -> new BMWVC()
-            //      );
+        if (RUN_FIXED_SET_SEARCH) {
+            benchmark.algorithms.add(
+                    (int maxVertexCoverSize, int maxIterations) -> new FixedSetSearch()
+            );
 
         }
 
@@ -86,7 +114,6 @@ public class Benchmark {
     public void runAlgorithms() {
         SolutionReporter<BitSet> intermediateSolutionReporter = new SolutionReporter<>();
         ExecutorService executor = Executors.newCachedThreadPool();
-        TestFileDatabase testFileDatabase = new TestFileDatabase();
 
         for (WeightedVertexCoverAlgorithmInitializer algorithm : this.algorithms) {
 
@@ -96,13 +123,12 @@ public class Benchmark {
                 summaries.putIfAbsent(key, new ArrayList<>());
 
                 BasicGraph graph = new BasicGraph(filePath);
-                graph.setRandomWeights(RANDOM_SEED);
                 for (int i = 0; i < TEST_RUNS; i++) {
                     String uniqueIdentifier = String.format("%s-%s-%d", algorithmName, filePath, i);
                     long startTime = System.currentTimeMillis(); // Record start time
 
                     WeightedVertexCoverAlgorithm algorithmInstance = algorithm.initialize(
-                            testFileDatabase.getExpectedResult(filePath),
+                            TestFileDatabase.getExpectedResult(filePath),
                             MAX_ITERATIONS);
                     Future<BitSet> future =
                             executor.submit(
@@ -204,22 +230,34 @@ public class Benchmark {
 
                         // Get the minimum weight from the summaries
                         int minWeight = summaryList.stream().mapToInt(Summary::getWeight).min().orElse(0);
+                        int minWeightCount = (int) summaryList.stream().filter(s -> s.getWeight() == minWeight).count();
 
                         // Calculate the mean weight for the summaries
                         double meanWeight = summaryList.stream().mapToInt(Summary::getWeight).average().orElse(0.0);
 
                         // Get the maximum weight from the summaries
                         int maxWeight = summaryList.stream().mapToInt(Summary::getWeight).max().orElse(0);
+                        int maxWeightCount = (int) summaryList.stream().filter(s -> s.getWeight() == maxWeight).count();
 
                         // Write the file name to the file
                         writer.println("\tFile: " + fileEntry.getKey());
 
                         // Write the mean and standard deviation of the execution time to the file
                         writer.println(
-                                "\tTime \tmean:" + meanTime + "ms\tstdDev " + String.format("%.2f", stdDevTime) + "ms");
+                                "\tTime: " + meanTime + "ms" + String.format(" (±%.2fms)", stdDevTime));
 
                         // Write the mean, minimum, and maximum weight to the file
-                        writer.println("\tWeight:\tmean:" + meanWeight + "\tmin:" + minWeight + "\tmax:" + maxWeight);
+                        writer.println("\tWeight:");
+                        int optimalWeight = TestFileDatabase.getExpectedResult(fileEntry.getKey());
+                        if (optimalWeight != Integer.MAX_VALUE) {
+                            writer.println("\t\toptimal value:\t" + optimalWeight);
+                        } else {
+                            writer.println("\t\toptimal value:\t" + "unknown");
+                        }
+                        writer.println("\t\tmean value:\t\t" + meanWeight);
+                        writer.println("\t\tmin value:\t\t" + minWeight + "\t(" + minWeightCount + " times)");
+                        writer.println("\t\tmax value:\t\t" + maxWeight + "\t(" + maxWeightCount + " times)");
+
 
                         // Write a new line to the file
                         writer.println();
