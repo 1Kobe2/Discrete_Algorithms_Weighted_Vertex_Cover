@@ -56,8 +56,7 @@ public class BasicGraph {
                         st.nextToken(); // skip 'p' token
                         st.nextToken(); // skip problem type (e.g., 'edge')
                         this.numVertices = Integer.parseInt(st.nextToken());
-                        expectedNumberOfEdges =
-                                Integer.parseInt(st.nextToken()); // Store the expected number of edges
+                        expectedNumberOfEdges = Integer.parseInt(st.nextToken()); // Store the expected number of edges
                         // Initialize graph with the number of vertices
                         adjacencyList = new BitSet[this.numVertices];
                         for (int i = 0; i < this.numVertices; i++) {
@@ -103,6 +102,52 @@ public class BasicGraph {
         return adjacencyList[source].get(destination);
     }
 
+    public BasicGraph copy() {
+        BitSet[] newAdjecencyLists = new BitSet[this.adjacencyList.length];
+        for (int i = 0; i < this.adjacencyList.length; i++) {
+            newAdjecencyLists[i] = (BitSet) this.adjacencyList[i].clone();
+        }
+        ArrayList<Integer> newWeigths = new ArrayList<>();
+        for (int w : weights) {
+            newWeigths.add(w);
+        }
+        return new BasicGraph(newAdjecencyLists, newWeigths);
+    }
+
+    public void removeVertex(int vertex) {
+        for (int node = 0; node < numVertices; node++) {
+            getAdjacencyBitSet(node).clear(node);
+        }
+    }
+
+    private void growDisjointed(int vertex, BitSet disjoint) {
+        disjoint.set(vertex);
+        for (int i = 0; i < this.numVertices; i++) {
+            if (getAdjacencyBitSet(vertex).get(i) && !disjoint.get(i)) {
+                growDisjointed(vertex, disjoint);
+            }
+        }
+    }
+
+    public ArrayList<BitSet> findDisjointed() {
+        BitSet removed = new BitSet(this.numVertices);
+        ArrayList<BitSet> disjointed = new ArrayList<BitSet>();
+        HashSet<Integer> workList = new HashSet<>();
+        for (int node = 0; node < this.numVertices; node++) {
+            workList.add(node);
+        }
+        for (int node = 0; node < this.numVertices; node++) {
+            if (!removed.get(node)) {
+                BitSet disjoint = new BitSet(this.numVertices);
+                growDisjointed(node, disjoint);
+                removed.xor(disjoint);
+                disjointed.add(disjoint);
+            }
+        }
+
+        return disjointed;
+    }
+
     public void swapVertices(int vertex1, int vertex2) {
         if (vertex1 == vertex2) {
             return; // No need to swap if the vertices are the same
@@ -145,7 +190,8 @@ public class BasicGraph {
         return vertices;
     }
 
-    // Order vertices based on their relative degree in the given BitSet, smallest to largest
+    // Order vertices based on their relative degree in the given BitSet, smallest
+    // to largest
     public List<Integer> orderByRelativeDegree(BitSet vert) {
         List<Integer> vertices = new ArrayList<>();
         for (int i = 0; i < numVertices; i++) {
@@ -201,6 +247,7 @@ public class BasicGraph {
             }
             id++;
         }
+
         return vertexCover;
     }
 
@@ -230,9 +277,9 @@ public class BasicGraph {
         return adjacencyList[i].get(j);
     }
 
-
     /**
-     * Set the weights of the vertices to random values between minWeight and maxWeight
+     * Set the weights of the vertices to random values between minWeight and
+     * maxWeight
      *
      * @param seed      Random seed
      * @param minWeight Lower bound for the random weights (inclusive)
