@@ -19,6 +19,7 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
     private BitSet currentCover;        //current working solution
     private int upperBound;             //total weight of current best solution
     private int iteration;              //current iteration
+    private int lastImprovement;        //iteration at which the last improvement to the best solution was made
 
     /*
         Initialize DLSWCC with given number of maxIterations
@@ -40,10 +41,11 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
     @Override
     public BitSet calculateMinVertexCover(BasicGraph graph, IntermediateSolutionReporter intermediateSolutionReporter) {
         initialize(graph);
-        while (iteration < maxIterations) {
+        while (iteration < maxIterations && iteration - lastImprovement < maxIterations / 10) {
             while (graph.isVertexCover(currentCover)) {
                 upperBound = graph.getWeight(currentCover);
                 minimumVertexCover = (BitSet) currentCover.clone();
+                lastImprovement = iteration;
                 //intermediateSolutionReporter.solutionCallback(minimumVertexCover);
                 int id = nextVertex(currentCover);
                 currentCover.clear(id);
