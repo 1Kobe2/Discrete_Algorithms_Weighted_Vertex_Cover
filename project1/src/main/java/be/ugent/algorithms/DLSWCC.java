@@ -9,33 +9,36 @@ import java.util.Collections;
 import java.util.List;
 
 public class DLSWCC implements WeightedVertexCoverAlgorithm {
-    private static final String[] filePaths = {
-            "customgraphs/graph3.cwg",
-            "customgraphs/square-5.cwg",
-            "customgraphs/triangle-4.cwg",
-            "customgraphs/graph_5_0.5.cwg",
-    };
-    private final int maxIterations;
-    private BitSet wConfig;
-    private int[][] edgeWeights;
-    private double[] vertexScores;
-    private int[] vertexAges;
-    private BitSet minimumVertexCover;
-    private BitSet currentCover;
-    private int upperBound;
-    private int iteration;
-    private BasicGraph graph;
-    private int numVertices;
-    private BitSet tabuList;
+    private final int maxIterations;    //maximum amount of iterations
+    private BasicGraph graph;           //BasicGraph representation of current graph file
+    private int numVertices;            //number of vertices in current graph
+    private BitSet wConfig;             //has vertexScores[i] been changed since vertex i was last removed
+    private int[][] edgeWeights;        //higher weight means the edge is more often uncovered by currentCover
+    private double[] vertexScores;      //higher score means vertex is more likely to be added/removed
+    private int[] vertexAges;           //last iteration where vertex was added/removed
+    private BitSet tabuList;            //vertices that were added in the last iteration
+    private BitSet minimumVertexCover;  //current best found solution
+    private BitSet currentCover;        //current working solution
+    private int upperBound;             //total weight of current best solution
+    private int iteration;              //current iteration
 
+    /*
+        Initialize DLSWCC with given number of maxIterations
+     */
     public DLSWCC(int maxIterations) {
         this.maxIterations = maxIterations;
     }
 
+    /*
+        Initialize DLSWCC with default number of maxIterations
+    */
     public DLSWCC() {
-        this.maxIterations = 1000000;
+        this.maxIterations = 10000000;
     }
 
+    /*
+        Calculate the minimum weighted vertex cover for the given graph
+     */
     @Override
     public BitSet calculateMinVertexCover(BasicGraph graph, IntermediateSolutionReporter intermediateSolutionReporter) {
         initialize(graph);
@@ -74,6 +77,9 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         return minimumVertexCover;
     }
 
+    /*
+        Initialize all helper values, arrays and bitsets, and calculate an initial solution
+     */
     private void initialize(BasicGraph graph) {
         this.graph = graph;
         numVertices = graph.getNumVertices();
@@ -96,6 +102,9 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         initialMinimumVertexCover();
     }
 
+    /*
+        Calculate an initial minimum weighted vertex cover using a greedy approach
+     */
     private void initialMinimumVertexCover() {
         currentCover = new BitSet(numVertices);
         List<Double> scores = new ArrayList<>();
@@ -113,6 +122,9 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         }
     }
 
+    /*
+        Select the vertex with the highest score in the given BitSet, breaking ties in favor of the oldest one
+     */
     private int nextVertex(BitSet vertices) {
         int id = vertices.nextSetBit(0);
         for (int i = vertices.nextSetBit(id + 1); i >= 0; i = vertices.nextSetBit(i + 1)) {
@@ -123,6 +135,9 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         return id;
     }
 
+    /*
+        Increase edge weights of all edges not covered by currentCover
+     */
     private void updateEdgeWeights() {
         for (int i = currentCover.nextClearBit(0); i < numVertices; i = currentCover.nextClearBit(i + 1)) {
             for (int j = currentCover.nextClearBit(i + 1); j < numVertices; j = currentCover.nextClearBit(j + 1)) {
@@ -136,8 +151,12 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         }
     }
 
+    /*
+        Update vertexScores for the current added/removed vertex and its neighbours
+     */
     private void updateVertices(int id) {
         vertexScores[id] = -vertexScores[id];
+        vertexAges[id] = iteration;
         BitSet adjacentVertices = graph.getAdjacencyBitSet(id);
         for (int i = adjacentVertices.nextSetBit(0); i != -1; i = adjacentVertices.nextSetBit(i + 1)) {
             wConfig.set(i);
@@ -147,6 +166,5 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
             }
             vertexScores[i] += add;
         }
-        vertexAges[id] = iteration;
     }
 }

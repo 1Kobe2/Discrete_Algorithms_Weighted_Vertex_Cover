@@ -1,9 +1,6 @@
 package be.ugent;
 
-import be.ugent.algorithms.BMWVC;
-import be.ugent.algorithms.FixedSetSearch;
-import be.ugent.algorithms.PricingMethod;
-import be.ugent.algorithms.WeightedVertexCoverAlgorithm;
+import be.ugent.algorithms.*;
 import be.ugent.benchmark.TestFileDatabase;
 import be.ugent.graphs.BasicGraph;
 import be.ugent.benchmark.Solution;
@@ -40,7 +37,7 @@ public class Benchmark {
     private static final boolean RUN_PRICING_METHOD = true;
     private static final boolean RUN_BMWVC = false;
     private static final boolean RUN_FIXED_SET_SEARCH = false;
-    private static final boolean RUN_INEXACT_2 = false;
+    private static final boolean RUN_DLSWCC = false;
 
     // Maximum number of iterations for the inexact algorithms
     private static final int MAX_ITERATIONS = 10_000_000;
@@ -100,11 +97,8 @@ public class Benchmark {
 
         }
 
-        if (RUN_INEXACT_2) {
-            // TODO: Add second inexact algorithm
-            //      benchmark.algorithms.add(
-            //          (int maxVertexCoverSize, int maxIterations) -> new BMWVC()
-            //      );
+        if (RUN_DLSWCC) {
+            benchmark.algorithms.add((int maxVertexCoverSize, int maxIterations) -> new DLSWCC(maxIterations));
 
         }
 
