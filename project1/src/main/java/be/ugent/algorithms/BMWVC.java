@@ -254,12 +254,6 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
             System.out.print(node + ", ");
         }
         System.out.println("]");
-        System.out.print("[");
-        for (int node = 0; node < S.size(); node++) {
-            if (S.get(node))
-                System.out.print(node + ", ");
-        }
-        System.out.println("]");
         BitSet Sb = new BitSet(graph.getNumVertices());
         BitSet Si = new BitSet(graph.getNumVertices());
         Sb.set(0, graph.getNumVertices());
@@ -268,7 +262,7 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
     }
 
     public static void main(String[] args) {
-        BasicGraph graph = new BasicGraph("customgraphs/graph3.cwg");
+        BasicGraph graph = new BasicGraph("DIMACS_subset_ascii/C1000.9.clq");
         BMWVC bmwvc = new BMWVC();
         BitSet cover = bmwvc.calculateMinVertexCover(graph.copy(), null);
         System.out.print("[");
