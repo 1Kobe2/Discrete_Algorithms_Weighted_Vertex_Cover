@@ -1,22 +1,19 @@
+# This represents a triangle with 4 vertices, 3 at the corners of the triangle and 1 in the middle.
 # https://github.com/SleekPanther/minimum-weighted-vertex-cover-approximation-algorithm/blob/master/README.md#graph-3
 
 [configuration]
-vertices 6
-edges 7
+vertices 4
+edges 5
 
 [weights]
-2
-3
-4
-5
-7
-9
+10
+1
+1
+1
 
 [edges]
 0 1
-0 5
+0 2
+0 3
 1 2
-1 5
 2 3
-2 4
-4 5
