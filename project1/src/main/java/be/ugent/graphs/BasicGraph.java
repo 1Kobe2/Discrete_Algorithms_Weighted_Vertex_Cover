@@ -206,7 +206,9 @@ public class BasicGraph {
     public BasicGraph copy() {
         BitSet[] newAdjecencyLists = new BitSet[this.adjacencyList.length];
         for (int i = 0; i < this.adjacencyList.length; i++) {
-            newAdjecencyLists[i] = (BitSet) this.adjacencyList[i].clone();
+            BitSet set = new BitSet(this.numVertices);
+            set.or(adjacencyList[i]);
+            newAdjecencyLists[i] = set;
         }
         ArrayList<Integer> newWeigths = new ArrayList<>();
         for (int w : weights) {
@@ -403,12 +405,6 @@ public class BasicGraph {
     }
 
     public void exportToCWG(String filename) {
-        File f = new File("out/graphs/" + filename);
-        try {
-            f.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(
                 "out/graphs/" + filename))) {
             // Write configuration
