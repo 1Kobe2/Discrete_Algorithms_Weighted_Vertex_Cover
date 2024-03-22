@@ -46,6 +46,7 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
             while (graph.isVertexCover(currentCover)) {
                 upperBound = graph.getWeight(currentCover);
                 minimumVertexCover = (BitSet) currentCover.clone();
+                //intermediateSolutionReporter.solutionCallback(minimumVertexCover);
                 int id = nextVertex(currentCover);
                 currentCover.clear(id);
                 wConfig.clear(id);
