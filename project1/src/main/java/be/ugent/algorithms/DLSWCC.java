@@ -3,9 +3,7 @@ package be.ugent.algorithms;
 import be.ugent.benchmark.IntermediateSolutionReporter;
 import be.ugent.graphs.BasicGraph;
 
-import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Collections;
 import java.util.List;
 
 public class DLSWCC implements WeightedVertexCoverAlgorithm {
@@ -108,17 +106,10 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
      */
     private void initialMinimumVertexCover() {
         currentCover = new BitSet(numVertices);
-        List<Double> scores = new ArrayList<>();
-        for (double i : vertexScores) {
-            scores.add(i);
-        }
-        List<Double> indices = new ArrayList<>(scores);
-        scores.sort(Collections.reverseOrder(Double::compare));
+        List<Integer> vertices = graph.orderByDegree();
         int i = 0;
         while (!graph.isVertexCover(currentCover)) {
-            int id = indices.indexOf(scores.get(i));
-            currentCover.set(id);
-            indices.set(id, null);
+            currentCover.set(vertices.get(i));
             i++;
         }
     }
