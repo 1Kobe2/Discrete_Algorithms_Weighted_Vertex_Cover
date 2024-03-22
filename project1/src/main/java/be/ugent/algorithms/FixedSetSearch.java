@@ -57,14 +57,13 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
         int improvement;
         List<Integer> improvements = new ArrayList<>();
         for (int vertex = 0; vertex < graph.getNumVertices(); vertex++) {
-
             if (solution.get(vertex)) { // can only swap out vertices that are in the current solution
                 uniqueCover = (BitSet) graph.getAdjacencyBitSet(vertex).clone();
                 uniqueCover.andNot(solution);
 
                 improvement = graph.weight(vertex) - graph.getWeight(uniqueCover);
                 if (improvement > 0) {
-                    improvements.add(improvement);
+                    improvements.add(vertex);
                 }
             }
         }
@@ -203,7 +202,6 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
 
         Random random = new Random();
         for (int i = initialSolutionsCount; i < this.maxSolutionsCount; i++) {
-
             // generate subset of all solutions to construct the fixed set with
             fixedSetSolutions = new ArrayList<>(solutions.keySet());
             fixedSetSolutions.sort(Comparator.comparingInt(solutions::get));
@@ -245,12 +243,12 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
     }
 
     public static void main(String[] args) {
-        BasicGraph graph = new BasicGraph("DIMACS_subset_ascii/C125.9.clq");
-        graph.setRandomWeights(42);
+        BasicGraph graph = new BasicGraph("customgraphs/graph_20_0.1.cwg");
         FixedSetSearch fss = new FixedSetSearch();
         BitSet solution = fss.calculateMinVertexCover(graph, null);
         System.out.println(solution);
         System.out.println(graph.getWeight(solution));
+        System.out.println(graph.isVertexCover(solution));
 
     }
 }
