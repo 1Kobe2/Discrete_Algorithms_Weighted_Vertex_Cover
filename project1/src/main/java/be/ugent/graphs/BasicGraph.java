@@ -3,10 +3,7 @@ package be.ugent.graphs;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Paths;
@@ -20,18 +17,21 @@ public class BasicGraph {
 
     protected BitSet[] adjacencyList;
     protected int numVertices;
+    protected int numEdges;
     protected List<Integer> weights;
 
     public BasicGraph(BasicGraph graph) {
         this.adjacencyList = graph.adjacencyList;
         this.numVertices = graph.numVertices;
         this.weights = graph.weights;
+        this.numVertices = this.getNumVertices();
     }
 
     public BasicGraph(BitSet[] adjacencyList, List<Integer> weights) {
         this.adjacencyList = adjacencyList;
         this.numVertices = adjacencyList.length;
         this.weights = weights;
+        this.numVertices = this.getNumVertices();
     }
 
     public BasicGraph(String graphFilename) {
@@ -44,43 +44,140 @@ public class BasicGraph {
             file = Paths.get(res.toURI()).toFile();
             try (BufferedReader br = new BufferedReader(new FileReader(file))) {
                 String line;
-                while ((line = br.readLine()) != null) {
-                    line = line.trim();
-                    // Skip comment lines or empty lines
-                    if (line.isEmpty() || line.charAt(0) == 'c') {
-                        continue;
-                    }
-                    // Process problem line
-                    if (line.charAt(0) == 'p') {
-                        StringTokenizer st = new StringTokenizer(line);
-                        st.nextToken(); // skip 'p' token
-                        st.nextToken(); // skip problem type (e.g., 'edge')
-                        this.numVertices = Integer.parseInt(st.nextToken());
-                        expectedNumberOfEdges = Integer.parseInt(st.nextToken()); // Store the expected number of edges
-                        // Initialize graph with the number of vertices
-                        adjacencyList = new BitSet[this.numVertices];
-                        for (int i = 0; i < this.numVertices; i++) {
-                            adjacencyList[i] = new BitSet(this.numVertices);
+                if (graphFilename.endsWith(".clq")) {
+                    while ((line = br.readLine()) != null) {
+                        line = line.trim();
+                        // Skip comment lines or empty lines
+                        if (line.isEmpty() || line.charAt(0) == 'c') {
+                            continue;
                         }
-                    } else if (line.charAt(0) == 'e') {
-                        // Process edge line
-                        String[] parts = line.split(" ");
-                        int source = Integer.parseInt(parts[1]) - 1; // DIMACS vertices start from 1
-                        int destination = Integer.parseInt(parts[2]) - 1; // DIMACS vertices start from 1
-                        addEdge(source, destination);
+                        // Process problem line
+                        if (line.charAt(0) == 'p') {
+                            StringTokenizer st = new StringTokenizer(line);
+                            st.nextToken(); // skip 'p' token
+                            st.nextToken(); // skip problem type (e.g., 'edge')
+                            this.numVertices = Integer.parseInt(st.nextToken());
+                            expectedNumberOfEdges = Integer.parseInt(st.nextToken()); // Store the expected number of
+                                                                                      // edges
+                            // Initialize graph with the number of vertices
+                            adjacencyList = new BitSet[this.numVertices];
+                            for (int i = 0; i < this.numVertices; i++) {
+                                adjacencyList[i] = new BitSet(this.numVertices);
+                            }
+                        } else if (line.charAt(0) == 'e') {
+                            // Process edge line
+                            String[] parts = line.split(" ");
+                            int source = Integer.parseInt(parts[1]) - 1; // DIMACS vertices start from 1
+                            int destination = Integer.parseInt(parts[2]) - 1; // DIMACS vertices start from 1
+                            addEdge(source, destination);
+                        }
                     }
-                }
-                actualNumberOfEdges = this.getNumEdges();
-                if (actualNumberOfEdges != expectedNumberOfEdges) {
+                    this.numEdges = this.calculateNumberOfEdges();
+                    actualNumberOfEdges = this.getNumEdges();
+                    if (actualNumberOfEdges != expectedNumberOfEdges) {
 
-                    logger.error(
-                            "Error: The actual number of edges ({}) does not match the expected number ({}).",
-                            actualNumberOfEdges,
-                            expectedNumberOfEdges);
+                        logger.error(
+                                "Error: The actual number of edges ({}) does not match the expected number ({}).",
+                                actualNumberOfEdges,
+                                expectedNumberOfEdges);
+                        logger.error("Exiting...");
+                        System.exit(1);
+                    }
+                    weights = new ArrayList<>(Collections.nCopies(numVertices, 1));
+                } else if (graphFilename.endsWith(".cwg")) {
+                    boolean isEdgeSection = false;
+                    boolean isWeightSection = false;
+                    boolean isConfigSection = false;
+                    int vertexCounter = 0;
+                    while ((line = br.readLine()) != null) {
+                        line = line.trim();
+                        if (!line.isEmpty() && line.charAt(0) != '#') {
+                            if (line.charAt(0) == '[' && line.charAt(line.length() - 1) == ']' && line.length() > 2) {
+                                switch (line) {
+                                    case "[edges]" -> {
+                                        isEdgeSection = true;
+                                        isWeightSection = false;
+                                        isConfigSection = false;
+                                    }
+                                    case "[weights]" -> {
+                                        isWeightSection = true;
+                                        isEdgeSection = false;
+                                        isConfigSection = false;
+                                    }
+                                    case "[configuration]" -> {
+                                        isConfigSection = true;
+                                        isEdgeSection = false;
+                                        isWeightSection = false;
+                                    }
+                                    default -> {
+                                        // Do nothing
+                                    }
+                                }
+                            } else {
+
+                                if (isConfigSection) {
+                                    if (line.startsWith("vertices")) {
+                                        this.numVertices = Integer.parseInt(line.split(" ")[1]);
+                                        adjacencyList = new BitSet[this.numVertices];
+                                        for (int i = 0; i < this.numVertices; i++) {
+                                            adjacencyList[i] = new BitSet(this.numVertices);
+                                        }
+                                        weights = new ArrayList<>(Collections.nCopies(numVertices, 1));
+                                    } else if (line.startsWith("edges")) {
+                                        this.numEdges = Integer.parseInt(line.split(" ")[1]);
+                                    }
+                                } else if (isWeightSection) {
+                                    if (weights == null) {
+                                        throw new IllegalStateException(
+                                                "Weights section should come after the configuration section");
+                                    }
+                                    if (vertexCounter >= this.numVertices) {
+                                        throw new IllegalStateException(
+                                                "Number of weights exceeds the number of vertices");
+                                    }
+                                    this.weights.set(vertexCounter, Integer.parseInt(line));
+                                    vertexCounter++;
+                                } else if (isEdgeSection) {
+                                    String[] vertices = line.split(" ");
+                                    int source = Integer.parseInt(vertices[0]);
+                                    int destination = Integer.parseInt(vertices[1]);
+                                    this.addEdge(source, destination);
+                                }
+                            }
+                        }
+
+                    }
+                    this.numEdges = this.calculateNumberOfEdges();
+                } else if (graphFilename.endsWith(".mtx")) {
+                    while ((line = br.readLine()) != null) {
+                        line = line.trim();
+                        // Skip comment lines
+                        if (line.isEmpty() || line.charAt(0) == '%') {
+                            continue;
+                        }
+                        // Process problem line
+                        String[] parts = line.split(" ");
+                        if (parts.length == 3) { // This line contains the number of vertices and edges
+                            this.numVertices = Integer.parseInt(parts[0]);
+                            // Initialize graph with the number of vertices
+                            adjacencyList = new BitSet[this.numVertices];
+                            for (int i = 0; i < this.numVertices; i++) {
+                                adjacencyList[i] = new BitSet(this.numVertices);
+                            }
+                            weights = new ArrayList<>(Collections.nCopies(numVertices, 1));
+                        } else if (parts.length == 2) { // This line contains an edge
+                            int source = Integer.parseInt(parts[0]) - 1; // MTX vertices start from 1
+                            int destination = Integer.parseInt(parts[1]) - 1; // MTX vertices start from 1
+                            addEdge(source, destination);
+                        }
+                    }
+                    this.numEdges = this.calculateNumberOfEdges();
+
+                } else {
+                    logger.error("Error: Unsupported file format.");
                     logger.error("Exiting...");
                     System.exit(1);
                 }
-                weights = new ArrayList<>(Collections.nCopies(numVertices, 1));
             } catch (IOException e) {
                 logger.error("Error reading file: {}", e.getMessage());
                 logger.error("Exiting...");
@@ -94,6 +191,10 @@ public class BasicGraph {
     }
 
     public void addEdge(int source, int destination) {
+        if (!adjacencyList[source].get(destination)) {
+            numEdges++; // Increment the count when a new edge is added
+        }
+
         adjacencyList[source].set(destination);
         adjacencyList[destination].set(source); // Since it's an undirected graph
     }
@@ -116,36 +217,8 @@ public class BasicGraph {
 
     public void removeVertex(int vertex) {
         for (int node = 0; node < numVertices; node++) {
-            getAdjacencyBitSet(node).clear(node);
+            getAdjacencyBitSet(node).clear(vertex);
         }
-    }
-
-    private void growDisjointed(int vertex, BitSet disjoint) {
-        disjoint.set(vertex);
-        for (int i = 0; i < this.numVertices; i++) {
-            if (getAdjacencyBitSet(vertex).get(i) && !disjoint.get(i)) {
-                growDisjointed(vertex, disjoint);
-            }
-        }
-    }
-
-    public ArrayList<BitSet> findDisjointed() {
-        BitSet removed = new BitSet(this.numVertices);
-        ArrayList<BitSet> disjointed = new ArrayList<BitSet>();
-        HashSet<Integer> workList = new HashSet<>();
-        for (int node = 0; node < this.numVertices; node++) {
-            workList.add(node);
-        }
-        for (int node = 0; node < this.numVertices; node++) {
-            if (!removed.get(node)) {
-                BitSet disjoint = new BitSet(this.numVertices);
-                growDisjointed(node, disjoint);
-                removed.xor(disjoint);
-                disjointed.add(disjoint);
-            }
-        }
-
-        return disjointed;
     }
 
     public void swapVertices(int vertex1, int vertex2) {
@@ -207,12 +280,16 @@ public class BasicGraph {
         return numVertices;
     }
 
-    public int getNumEdges() {
+    public int calculateNumberOfEdges() {
         int edges = 0;
         for (int i = 0; i < numVertices; i++) {
             edges += adjacencyList[i].cardinality();
         }
         return edges / 2; // Since the graph is undirected
+    }
+
+    public int getNumEdges() {
+        return this.numEdges;
     }
 
     // Method to calculate the degree of a vertex
@@ -302,10 +379,10 @@ public class BasicGraph {
     }
 
     /**
-     * Get the weight of a vertex
+     * Get the weight of a vertexSet
      *
      * @param vertexSet BitSet representing multiple vertices
-     * @return Weight of the vertex
+     * @return Weight of the vertexSet
      */
     public int getWeight(BitSet vertexSet) {
         int weight = 0;
@@ -313,6 +390,51 @@ public class BasicGraph {
             weight += weights.get(i);
         }
         return weight;
+    }
+
+    /**
+     * Get the weight of a vertexS
+     *
+     * @param vertex Index of the vertex
+     * @return Weight of the vertex
+     */
+    public int getWeight(int vertex) {
+        return weights.get(vertex);
+    }
+
+    public void exportToCWG(String filename) {
+        File f = new File("out/graphs/" + filename);
+        try {
+            f.createNewFile();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(
+                "out/graphs/" + filename))) {
+            // Write configuration
+            writer.write("[configuration]\n");
+            writer.write("vertices " + numVertices + "\n");
+            writer.write("edges " + numEdges + "\n");
+
+            // Write weights
+            writer.write("\n[weights]\n");
+            for (int i = 0; i < numVertices; i++) {
+                writer.write(weights.get(i) + "\n");
+            }
+
+            // Write edges
+            writer.write("\n[edges]\n");
+            for (int i = 0; i < numVertices; i++) {
+                BitSet adjacency = adjacencyList[i];
+                for (int j = adjacency.nextSetBit(0); j >= 0; j = adjacency.nextSetBit(j + 1)) {
+                    if (i < j) { // To avoid duplicate edges
+                        writer.write(i + " " + j + "\n");
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {

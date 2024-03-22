@@ -3,3 +3,6 @@
 .idea
 /project1/build/
 /project1/.gradle/
+/out/
+
+/project1/src/main/resources/customgraphs/graph_*.cwg

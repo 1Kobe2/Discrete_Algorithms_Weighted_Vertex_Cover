@@ -10,8 +10,8 @@ import java.util.stream.IntStream;
 public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
 
     private final int candidateListSize = 5;
-    private final int initialPopulationSize = 100;
-    private final int maxAmountOfSolutions = 5000;
+    private final int initialSolutionsCount = 100;
+    private final int maxSolutionsCount = 5000;
     private final int stagnationLimit = 100;
 
 
@@ -19,7 +19,7 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
         int score;
         BitSet edges;
         Map<Integer, Integer> vertexAndScore = new HashMap<>();
-        for (int i = 0; i < graph.getNumEdges(); i++) {
+        for (int i = 0; i < graph.getNumVertices(); i++) {
             if (!solution.get(i)) {
                 edges = (BitSet) graph.getAdjacencyBitSet(i).clone();
                 edges.andNot(solution);
@@ -35,7 +35,7 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
         return vertices.subList(0, Math.min(this.candidateListSize, vertices.size()));
     }
 
-    private BitSet randomizedGreedyConstruction(BasicGraph graph, BitSet fixedSet) {
+    private BitSet randomizedGreedySolution(BasicGraph graph, BitSet fixedSet) {
         BitSet solution;
         solution = fixedSet == null ? new BitSet(graph.getNumVertices()) : (BitSet) fixedSet.clone();
 
@@ -48,8 +48,8 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
     }
 
 
-    private BitSet randomizedGreedyConstruction(BasicGraph graph) {
-        return randomizedGreedyConstruction(graph, null);
+    private BitSet randomizedGreedySolution(BasicGraph graph) {
+        return randomizedGreedySolution(graph, null);
     }
 
     private List<Integer> getElementSwapImprovements(BasicGraph graph, BitSet solution) {
@@ -74,18 +74,17 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
     private List<int[]> getPairSwapImprovements(BasicGraph graph, BitSet solution) {
         BitSet uniqueCover;
         int improvement;
-        int[] pair = new int[2];
         List<int[]> improvements = new ArrayList<>();
         for (int vertex1 = 0; vertex1 < graph.getNumVertices(); vertex1++) {
-            for (int vertex2 = 0; vertex2 < graph.getNumVertices(); vertex2++) {
-                if (vertex1 != vertex2 && solution.get(vertex1) && solution.get(vertex2)
-                        && !graph.getAdjacencyBitSet(vertex1).get(vertex2)) {
+            for (int vertex2 = vertex1+1; vertex2 < graph.getNumVertices(); vertex2++) {
+                if (solution.get(vertex1) && solution.get(vertex2) && !graph.getAdjacencyBitSet(vertex1).get(vertex2)) {
                     uniqueCover = (BitSet) graph.getAdjacencyBitSet(vertex1).clone();
                     uniqueCover.or(graph.getAdjacencyBitSet(vertex2));
                     uniqueCover.andNot(solution);
 
                     improvement = graph.weight(vertex1) + graph.weight(vertex2) - graph.getWeight(uniqueCover);
                     if (improvement > 0) {
+                        int[] pair = new int[2];
                         pair[0] = vertex1;
                         pair[1] = vertex2;
                         improvements.add(pair);
@@ -134,11 +133,11 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
         return solution;
     }
 
-    private Map<BitSet, Integer> getInitialPopulation(BasicGraph graph) {
+    private Map<BitSet, Integer> getInitialSolutions(BasicGraph graph) {
         BitSet solution;
         Map<BitSet, Integer> solutions = new HashMap<>();
-        for (int i = 0; i < initialPopulationSize; i++) {
-            solution = randomizedGreedyConstruction(graph);
+        for (int i = 0; i < this.initialSolutionsCount; i++) {
+            solution = randomizedGreedySolution(graph);
             solution = localSearch(graph, solution);
             solutions.put(solution, graph.getWeight(solution));
         }
@@ -158,7 +157,7 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
         }
 
         // sort vertices based on their occurrences
-        List<Integer> sortedVertices = IntStream.rangeClosed(0, graph.getNumVertices())
+        List<Integer> sortedVertices = IntStream.range(0, graph.getNumVertices())
                 .boxed().sorted(Comparator.comparingInt(i -> vertexCounts[i])).collect(Collectors.toList());
 
         // make a fixed set of size with vertices that have the most occurrences and are present in base
@@ -170,6 +169,7 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
             if (base.get(vertex)) {
                 fixedSet.flip(vertex);
             }
+            index++;
         }
         return fixedSet;
     }
@@ -178,7 +178,7 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
     public BitSet calculateMinVertexCover(BasicGraph graph, IntermediateSolutionReporter intermediateSolutionReporter) {
 
         // initial solutions to construct fixed set with
-        Map<BitSet, Integer> solutions = getInitialPopulation(graph);
+        Map<BitSet, Integer> solutions = getInitialSolutions(graph);
 
         // variables for the size of the fixed set
         int size;
@@ -202,25 +202,25 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
         int stagnationCounter = 0;
 
         Random random = new Random();
-        while (solutions.size() != maxAmountOfSolutions) {
+        for (int i = initialSolutionsCount; i < this.maxSolutionsCount; i++) {
+
             // generate subset of all solutions to construct the fixed set with
             fixedSetSolutions = new ArrayList<>(solutions.keySet());
             fixedSetSolutions.sort(Comparator.comparingInt(solutions::get));
-            fixedSetSolutions = fixedSetSolutions.subList(0, this.initialPopulationSize);
+            fixedSetSolutions = fixedSetSolutions.subList(0, Math.min(this.initialSolutionsCount, solutions.size()));
             if (minSolution == null) {
                 minSolution = fixedSetSolutions.get(0);
             }
             Collections.shuffle(fixedSetSolutions);
-
             // choose the base solution
-            baseSolution = fixedSetSolutions.get(random.nextInt(this.initialPopulationSize));
+            baseSolution = fixedSetSolutions.get(random.nextInt(fixedSetSolutions.size()));
 
             // get the fixed set of the given size
             size = (int) (baseSolution.cardinality() * sizeFactor);
             fixedSet = getFixedSet(graph, baseSolution, fixedSetSolutions, size);
 
             // get a greedy construction containing the fixed set and do local search
-            solution = randomizedGreedyConstruction(graph, fixedSet);
+            solution = randomizedGreedySolution(graph, fixedSet);
             solution = localSearch(graph, solution);
 
             // add the solution
@@ -232,8 +232,8 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
                 minSolution = solution;
                 minWeight = weight;
                 stagnationCounter = 0;
-                intermediateSolutionReporter.solutionCallback(minSolution);
-            } else if (stagnationCounter == stagnationLimit) {
+                //intermediateSolutionReporter.solutionCallback(minSolution);
+            } else if (stagnationCounter == this.stagnationLimit) {
                 // if sizeIndex became so small that sizeFactor was 1 last round, restart from 0
                 sizeIndex = sizeFactor == 1 ? 0 : sizeIndex + 1;
                 sizeFactor = (1 - (1 / Math.pow(2, sizeIndex)));
@@ -242,5 +242,15 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
         }
 
         return minSolution;
+    }
+
+    public static void main(String[] args) {
+        BasicGraph graph = new BasicGraph("DIMACS_subset_ascii/C125.9.clq");
+        graph.setRandomWeights(42);
+        FixedSetSearch fss = new FixedSetSearch();
+        BitSet solution = fss.calculateMinVertexCover(graph, null);
+        System.out.println(solution);
+        System.out.println(graph.getWeight(solution));
+
     }
 }
