@@ -111,7 +111,9 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         List<Integer> vertices = graph.orderByDegree();
         int i = 0;
         while (!graph.isVertexCover(currentCover)) {
-            currentCover.set(vertices.get(i));
+            int id = vertices.get(i);
+            currentCover.set(id);
+            vertexScores[id] = -vertexScores[id];
             i++;
         }
     }
