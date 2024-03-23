@@ -332,7 +332,7 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
     }
 
     public static void main(String[] args) {
-        BasicGraph graph = new BasicGraph("customgraphs/graph_100_0.05.cwg");
+        BasicGraph graph = new BasicGraph("customgraphs/graph_20_0.1.cwg");
         BMWVC bmwvc = new BMWVC();
         BitSet cover = bmwvc.calculateMinVertexCover(graph.copy(), null);
         System.out.print("[");
