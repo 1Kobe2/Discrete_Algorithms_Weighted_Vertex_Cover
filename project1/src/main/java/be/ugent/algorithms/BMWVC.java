@@ -224,6 +224,21 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
         return disjointed;
     }
 
+    private int selectVertex(BasicGraph graph) {
+        int vertexMinDegree = -1;
+        int maxDegree = Integer.MIN_VALUE;
+        for (int vertex = 0; vertex < graph.getNumVertices(); vertex++) {
+            if (!removed_nodes.contains(vertex)) {
+                int degree = graph.getAdjacencyBitSet(vertex).cardinality();
+                if (degree > maxDegree) {
+                    maxDegree = degree;
+                    vertexMinDegree = vertex;
+                }
+            }
+        }
+        return vertexMinDegree;
+    }
+
     private BitSet search(BasicGraph graph, BitSet cover, BitSet best) {
         // System.out.print("\n");
         // System.out.print("current: ");
@@ -240,22 +255,14 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
         }
 
         ArrayList<BitSet> disjointed = findDisjointed(graph);
-        if (calculateLowerBound(disjointed, graph)
-                + graph.getWeight(cover) >= graph.getWeight(best)) {
+        // if (calculateLowerBound(disjointed, graph)
+        // + graph.getWeight(cover) >= graph.getWeight(best)) {
+        if (graph.getWeight(cover) > graph.getWeight(best)) {
+            // System.out.println("lowerbound prune");
             return (BitSet) best.clone();
         }
 
-        int vertex = -1;
-        int maxDegree = Integer.MIN_VALUE;
-        for (int node = 0; node < graph.getNumVertices(); node++) {
-            if (!removed_nodes.contains(node)) {
-                int degree = graph.getAdjacencyBitSet(node).cardinality();
-                if (degree > maxDegree) {
-                    maxDegree = degree;
-                    vertex = node;
-                }
-            }
-        }
+        int vertex = selectVertex(graph);
 
         BasicGraph newGraph = graph.copy();
         Set<Integer> oldRemovedNodes = new HashSet<>();
@@ -325,7 +332,7 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
     }
 
     public static void main(String[] args) {
-        BasicGraph graph = new BasicGraph("customgraphs/graph_40_0.1.cwg");
+        BasicGraph graph = new BasicGraph("customgraphs/graph_100_0.05.cwg");
         BMWVC bmwvc = new BMWVC();
         BitSet cover = bmwvc.calculateMinVertexCover(graph.copy(), null);
         System.out.print("[");

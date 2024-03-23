@@ -242,7 +242,7 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
     }
 
     public static void main(String[] args) {
-        BasicGraph graph = new BasicGraph("customgraphs/graph_40_0.1.cwg");
+        BasicGraph graph = new BasicGraph("customgraphs/graph_100_0.05.cwg");
         FixedSetSearch fss = new FixedSetSearch();
         BitSet solution = fss.calculateMinVertexCover(graph, null);
         System.out.println(solution);
