@@ -14,7 +14,6 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
     private final int maxSolutionsCount = 5000;
     private final int stagnationLimit = 100;
 
-
     private List<Integer> restrictedCandidateList(BasicGraph graph, BitSet solution) {
         int score;
         BitSet edges;
@@ -47,7 +46,6 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
         return solution;
     }
 
-
     private BitSet randomizedGreedySolution(BasicGraph graph) {
         return randomizedGreedySolution(graph, null);
     }
@@ -75,7 +73,7 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
         int improvement;
         List<int[]> improvements = new ArrayList<>();
         for (int vertex1 = 0; vertex1 < graph.getNumVertices(); vertex1++) {
-            for (int vertex2 = vertex1+1; vertex2 < graph.getNumVertices(); vertex2++) {
+            for (int vertex2 = vertex1 + 1; vertex2 < graph.getNumVertices(); vertex2++) {
                 if (solution.get(vertex1) && solution.get(vertex2) && !graph.getAdjacencyBitSet(vertex1).get(vertex2)) {
                     uniqueCover = (BitSet) graph.getAdjacencyBitSet(vertex1).clone();
                     uniqueCover.or(graph.getAdjacencyBitSet(vertex2));
@@ -159,7 +157,8 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
         List<Integer> sortedVertices = IntStream.range(0, graph.getNumVertices())
                 .boxed().sorted(Comparator.comparingInt(i -> vertexCounts[i])).collect(Collectors.toList());
 
-        // make a fixed set of size with vertices that have the most occurrences and are present in base
+        // make a fixed set of size with vertices that have the most occurrences and are
+        // present in base
         int vertex;
         int index = 0;
         BitSet fixedSet = new BitSet(graph.getNumVertices());
@@ -230,7 +229,7 @@ public class FixedSetSearch implements WeightedVertexCoverAlgorithm {
                 minSolution = solution;
                 minWeight = weight;
                 stagnationCounter = 0;
-                //intermediateSolutionReporter.solutionCallback(minSolution);
+                // intermediateSolutionReporter.solutionCallback(minSolution);
             } else if (stagnationCounter == this.stagnationLimit) {
                 // if sizeIndex became so small that sizeFactor was 1 last round, restart from 0
                 sizeIndex = sizeFactor == 1 ? 0 : sizeIndex + 1;
