@@ -3,9 +3,7 @@ package be.ugent.algorithms;
 import be.ugent.benchmark.IntermediateSolutionReporter;
 import be.ugent.graphs.BasicGraph;
 
-import java.util.ArrayList;
 import java.util.BitSet;
-import java.util.Collections;
 import java.util.List;
 
 public class DLSWCC implements WeightedVertexCoverAlgorithm {
@@ -21,6 +19,7 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
     private BitSet currentCover;        //current working solution
     private int upperBound;             //total weight of current best solution
     private int iteration;              //current iteration
+    private int lastImprovement;        //iteration at which the last improvement to the best solution was made
 
     /*
         Initialize DLSWCC with given number of maxIterations
@@ -42,10 +41,12 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
     @Override
     public BitSet calculateMinVertexCover(BasicGraph graph, IntermediateSolutionReporter intermediateSolutionReporter) {
         initialize(graph);
-        while (iteration < maxIterations) {
+        while (iteration < maxIterations && iteration - lastImprovement < maxIterations / 10) {
             while (graph.isVertexCover(currentCover)) {
                 upperBound = graph.getWeight(currentCover);
                 minimumVertexCover = (BitSet) currentCover.clone();
+                lastImprovement = iteration;
+                //intermediateSolutionReporter.solutionCallback(minimumVertexCover);
                 int id = nextVertex(currentCover);
                 currentCover.clear(id);
                 wConfig.clear(id);
@@ -91,7 +92,7 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         tabuList = new BitSet(graph.getNumVertices());
         iteration = 0;
         for (int i = 0; i < numVertices; i++) {
-            vertexScores[i] = graph.degree(i);
+            vertexScores[i] = (double) graph.degree(i) / graph.getWeight(i);
             for (int j = i + 1; j < numVertices; j++) {
                 if (graph.hasEdge(i, j)) {
                     edgeWeights[i][j] = 1;
@@ -107,17 +108,10 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
      */
     private void initialMinimumVertexCover() {
         currentCover = new BitSet(numVertices);
-        List<Double> scores = new ArrayList<>();
-        for (double i : vertexScores) {
-            scores.add(i);
-        }
-        List<Double> indices = new ArrayList<>(scores);
-        scores.sort(Collections.reverseOrder(Double::compare));
+        List<Integer> vertices = graph.orderByDegree();
         int i = 0;
         while (!graph.isVertexCover(currentCover)) {
-            int id = indices.indexOf(scores.get(i));
-            currentCover.set(id);
-            indices.set(id, null);
+            currentCover.set(vertices.get(i));
             i++;
         }
     }
@@ -144,6 +138,8 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
                 if (graph.hasEdge(i, j)) {
                     edgeWeights[i][j]++;
                     edgeWeights[j][i]++;
+                    vertexScores[i] += 1.0d / graph.getWeight(i);
+                    vertexScores[j] += 1.0d / graph.getWeight(j);
                     wConfig.set(i);
                     wConfig.set(j);
                 }
@@ -160,8 +156,8 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         BitSet adjacentVertices = graph.getAdjacencyBitSet(id);
         for (int i = adjacentVertices.nextSetBit(0); i != -1; i = adjacentVertices.nextSetBit(i + 1)) {
             wConfig.set(i);
-            double add = edgeWeights[i][id] / (double) graph.getWeight(i);
-            if (currentCover.get(i) ^ currentCover.get(id)) {
+            double add = (double) edgeWeights[i][id] / graph.getWeight(i);
+            if (currentCover.get(i) != currentCover.get(id)) {
                 add = -add;
             }
             vertexScores[i] += add;
