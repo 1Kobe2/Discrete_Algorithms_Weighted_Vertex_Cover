@@ -156,7 +156,7 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
             wConfig.set(i);
             double add = edgeWeights[i][id] / (double) graph.getWeight(i);
             if (currentCover.get(i) ^ currentCover.get(id)) {
-                add = -add;
+                add = -add/2;
             }
             vertexScores[i] += add;
         }
