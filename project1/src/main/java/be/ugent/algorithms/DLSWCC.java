@@ -92,7 +92,7 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         tabuList = new BitSet(graph.getNumVertices());
         iteration = 0;
         for (int i = 0; i < numVertices; i++) {
-            vertexScores[i] = graph.degree(i);
+            vertexScores[i] = (double) graph.degree(i) / graph.getWeight(i);
             for (int j = i + 1; j < numVertices; j++) {
                 if (graph.hasEdge(i, j)) {
                     edgeWeights[i][j] = 1;
@@ -138,6 +138,8 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
                 if (graph.hasEdge(i, j)) {
                     edgeWeights[i][j]++;
                     edgeWeights[j][i]++;
+                    vertexScores[i] += 1.0d / graph.getWeight(i);
+                    vertexScores[j] += 1.0d / graph.getWeight(j);
                     wConfig.set(i);
                     wConfig.set(j);
                 }
@@ -154,9 +156,9 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
         BitSet adjacentVertices = graph.getAdjacencyBitSet(id);
         for (int i = adjacentVertices.nextSetBit(0); i != -1; i = adjacentVertices.nextSetBit(i + 1)) {
             wConfig.set(i);
-            double add = edgeWeights[i][id] / (double) graph.getWeight(i);
-            if (currentCover.get(i) ^ currentCover.get(id)) {
-                add = -add/2;
+            double add = (double) edgeWeights[i][id] / graph.getWeight(i);
+            if (currentCover.get(i) != currentCover.get(id)) {
+                add = -add;
             }
             vertexScores[i] += add;
         }
