@@ -259,7 +259,7 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
         // + graph.getWeight(cover) >= graph.getWeight(best)) {
         if (graph.getWeight(cover) > graph.getWeight(best)) {
             // System.out.println("lowerbound prune");
-            return (BitSet) best.clone();
+            return (BitSet) besqt.clone();
         }
 
         int vertex = selectVertex(graph);
@@ -319,10 +319,10 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
                 }
             }
             BitSet set = search(disjoint, Si, subGraph);
-            System.out.print("Solution for graph: ");
-            printBitSet(subGraph, graph);
-            System.out.print(": ");
-            printBitSet(set, graph);
+            // System.out.print("Solution for graph: ");
+            // printBitSet(subGraph, graph);
+            // System.out.print(": ");
+            // printBitSet(set, graph);
             S.or(set);
             removed_nodes = new HashSet<>();
             removed_nodes.addAll(nodesRemovedThroughReduction);
