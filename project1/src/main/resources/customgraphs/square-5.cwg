@@ -1,5 +1,5 @@
 # This represents a square with 4 vertices, with the top left and bottom right vertices connected by an edge.
-# https://github.com/SleekPanther/minimum-weighted-vertex-cover-approximation-algorithm/blob/master/README.md#graph-3
+# https://github.com/SleekPanther/minimum-weighted-vertex-cover-approximation-algorithm/blob/master/README.md#graph-2
 
 [configuration]
 vertices 4

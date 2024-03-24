@@ -210,10 +210,7 @@ public class BasicGraph {
             set.or(adjacencyList[i]);
             newAdjecencyLists[i] = set;
         }
-        ArrayList<Integer> newWeigths = new ArrayList<>();
-        for (int w : weights) {
-            newWeigths.add(w);
-        }
+        ArrayList<Integer> newWeigths = new ArrayList<>(weights);
         return new BasicGraph(newAdjecencyLists, newWeigths);
     }
 

@@ -10,13 +10,14 @@ import be.ugent.util.WeightedVertexCoverAlgorithmInitializer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -34,8 +35,8 @@ public class Benchmark {
     private static final int TEST_RUNS = 5;
 
     // Flags to enable or disable the different algorithms
-    private static final boolean RUN_PRICING_METHOD = true;
-    private static final boolean RUN_BMWVC = false;
+    private static final boolean RUN_PRICING_METHOD = false;
+    private static final boolean RUN_BMWVC = true;
     private static final boolean RUN_FIXED_SET_SEARCH = false;
     private static final boolean RUN_DLSWCC = false;
 
@@ -50,29 +51,102 @@ public class Benchmark {
 
     // List of file paths to be tested
     private final String[] filePaths = {
-            "customgraphs/triangle-4.cwg",
-            "customgraphs/graph_0_0.1.cwg",
-            "customgraphs/graph_10_0.1.cwg",
-            "customgraphs/graph_20_0.02.cwg",
-            "customgraphs/graph_40_0.02.cwg",
-            "customgraphs/graph_40_0.05.cwg",
-            "customgraphs/graph_100_0.01.cwg",
-            "customgraphs/graph_100_0.02.cwg",
+//            "customgraphs/graph_500_0.01.cwg",
+//            "customgraphs/graph_200_0.1.cwg",
+//            "customgraphs/graph_200_0.05.cwg",
+//            "customgraphs/graph_150_0.05.cwg",
             "customgraphs/graph_100_0.05.cwg",
-            "customgraphs/graph_100_0.1.cwg",
-            "customgraphs/graph_100_0.15.cwg",
-            "customgraphs/graph_100_0.2.cwg",
-            "customgraphs/graph_100_0.25.cwg",
-            "customgraphs/graph_100_0.5.cwg",
-            "customgraphs/graph_100_0.75.cwg",
-            "customgraphs/graph_100_0.9.cwg",
-            "customgraphs/graph_100_0.95.cwg",
-            "customgraphs/graph_100_0.99.cwg",
-            "customgraphs/graph_500_0.01.cwg",
-            "customgraphs/graph_500_0.1.cwg",
-            "customgraphs/graph_500_0.5.cwg",
-            "customgraphs/graph_500_0.9.cwg",
-            "customgraphs/graph_100000_1.0E-4.cwg",
+            "customgraphs/graph_50_0.1.cwg",
+            "customgraphs/graph_40_0.5.cwg",
+            "customgraphs/graph_20_0.5.cwg",
+            "customgraphs/graph_20_0.1.cwg",
+            "customgraphs/graph_10_0.5.cwg",
+            "customgraphs/graph_5_0.5.cwg",
+            "customgraphs/triangle-4.cwg",
+            "customgraphs/square-5.cwg",
+            "customgraphs/graph3.cwg",
+
+
+//            "customgraphs/graph_30_0.1.cwg",
+//            "customgraphs/graph_30_0.5.cwg",
+
+//            "customgraphs/graph_40_0.05.cwg",
+//            "customgraphs/graph_40_0.1.cwg",
+
+//            "customgraphs/graph_50_0.05.cwg",
+//            "customgraphs/graph_50_0.5.cwg",
+
+//            "customgraphs/graph_100_0.1.cwg",
+//            "customgraphs/graph_100_0.5.cwg",
+
+//            "customgraphs/graph_150_0.1.cwg",
+//            "customgraphs/graph_150_0.5.cwg",
+
+//            "customgraphs/graph_200_0.01.cwg",
+//            "customgraphs/graph_200_0.5.cwg",
+
+//            "customgraphs/graph_500_0.005.cwg",
+//            "customgraphs/graph_500_0.05.cwg",
+//            "customgraphs/graph_500_0.1.cwg",
+//            "customgraphs/graph_500_0.5.cwg",
+
+//            "customgraphs/graph_1000_0.005.cwg",
+//            "customgraphs/graph_1000_0.01.cwg",
+//            "customgraphs/graph_1000_0.05.cwg",
+//            "customgraphs/graph_1000_0.1.cwg",
+//            "customgraphs/graph_1000_0.5.cwg",
+
+//            "customgraphs/graph_2000_0.001.cwg",
+//            "customgraphs/graph_2000_0.005.cwg",
+//            "customgraphs/graph_2000_0.01.cwg",
+//            "customgraphs/graph_2000_0.05.cwg",
+//            "customgraphs/graph_2000_0.1.cwg",
+//            "customgraphs/graph_2000_0.5.cwg",
+
+//            "customgraphs/graph_5000_5.0E-4.cwg",
+//            "customgraphs/graph_5000_0.005.cwg",
+//            "customgraphs/graph_5000_0.001.cwg",
+//            "customgraphs/graph_5000_0.05.cwg",
+//            "customgraphs/graph_5000_0.1.cwg",
+//            "customgraphs/graph_5000_0.01.cwg",
+//            "customgraphs/graph_5000_0.5.cwg",
+
+//            "customgraphs/graph_10000_5.0E-4.cwg",
+//            "customgraphs/graph_10000_0.001.cwg",
+//            "customgraphs/graph_10000_0.005.cwg",
+//            "customgraphs/graph_10000_0.01.cwg",
+//            "customgraphs/graph_10000_0.05.cwg",
+//            "customgraphs/graph_10000_0.1.cwg",
+//            "customgraphs/graph_10000_0.5.cwg",
+
+//            "customgraphs/graph_15000_5.0E-4.cwg",
+//            "customgraphs/graph_15000_0.001.cwg",
+//            "customgraphs/graph_15000_0.005.cwg",
+//            "customgraphs/graph_15000_0.01.cwg",
+//            "customgraphs/graph_15000_0.05.cwg",
+//            "customgraphs/graph_15000_0.1.cwg",
+//            "customgraphs/graph_15000_0.5.cwg",
+
+//            "customgraphs/graph_20000_1.0E-4.cwg",
+//            "customgraphs/graph_20000_5.0E-4.cwg",
+//            "customgraphs/graph_20000_0.001.cwg",
+//            "customgraphs/graph_20000_0.005.cwg",
+//            "customgraphs/graph_20000_0.01.cwg",
+//            "customgraphs/graph_20000_0.05.cwg",
+//            "customgraphs/graph_20000_0.1.cwg",
+//            "customgraphs/graph_20000_0.5.cwg",
+
+//            "customgraphs/graph_25000_1.0E-4.cwg",
+//            "customgraphs/graph_25000_5.0E-4.cwg",
+//            "customgraphs/graph_25000_0.001.cwg",
+//            "customgraphs/graph_25000_0.005.cwg",
+//            "customgraphs/graph_25000_0.01.cwg",
+//            "customgraphs/graph_25000_0.05.cwg",
+//            "customgraphs/graph_25000_0.1.cwg",
+//            "customgraphs/graph_25000_0.5.cwg",
+
+//            "customgraphs/graph_50000_5.0E-5.cwg",
+//            "customgraphs/graph_50000_1.0E-4.cwg",
     };
 
     // Map to store the summary for each of the algorithms and files
@@ -86,15 +160,8 @@ public class Benchmark {
             benchmark.algorithms.add((int maxVertexCoverSize, int maxIterations) -> new PricingMethod());
         }
 
-        if (RUN_BMWVC) {
-            benchmark.algorithms.add((int maxVertexCoverSize, int maxIterations) -> new BMWVC());
-        }
-
         if (RUN_FIXED_SET_SEARCH) {
-            benchmark.algorithms.add(
-                    (int maxVertexCoverSize, int maxIterations) -> new FixedSetSearch()
-            );
-
+            benchmark.algorithms.add((int maxVertexCoverSize, int maxIterations) -> new FixedSetSearch());
         }
 
         if (RUN_DLSWCC) {
@@ -102,12 +169,17 @@ public class Benchmark {
 
         }
 
+        if (RUN_BMWVC) {
+            benchmark.algorithms.add((int maxVertexCoverSize, int maxIterations) -> new BMWVC());
+        }
+
+
         benchmark.runAlgorithms();
     }
 
     public void runAlgorithms() {
         SolutionReporter<BitSet> intermediateSolutionReporter = new SolutionReporter<>();
-        ExecutorService executor = Executors.newCachedThreadPool();
+        ExecutorService executor = Executors.newFixedThreadPool(10);
 
         for (WeightedVertexCoverAlgorithmInitializer algorithm : this.algorithms) {
 
@@ -127,15 +199,18 @@ public class Benchmark {
                     Future<BitSet> future =
                             executor.submit(
                                     () ->
-                                            algorithmInstance.calculateMinVertexCover(
-                                                    graph,
-                                                    solution -> {
-                                                        logger.info(
-                                                                "Reporting solution for {}, {}",
-                                                                uniqueIdentifier, solution);
-                                                        intermediateSolutionReporter.reportSolution(
-                                                                solution, uniqueIdentifier);
-                                                    }));
+                                    {
+                                        BasicGraph graphCopy = graph.copy();
+                                        return algorithmInstance.calculateMinVertexCover(
+                                                graphCopy,
+                                                solution -> {
+//                                                        logger.debug(
+//                                                                "Reporting solution for {}, {}",
+//                                                                uniqueIdentifier, solution.cardinality());
+                                                    intermediateSolutionReporter.reportSolution(
+                                                            solution, uniqueIdentifier);
+                                                });
+                                    });
 
                     long executionTime = 0;
                     try {
@@ -156,26 +231,42 @@ public class Benchmark {
 
                     Solution<BitSet> bestSolution = intermediateSolutionReporter.getSolution(uniqueIdentifier);
 
-                    int minWeight = graph.getWeight(bestSolution.getValue());
+
+                    int minWeight;
+                    String bestSolutionString;
+                    if (bestSolution == null) {
+                        minWeight = Integer.MAX_VALUE;
+                        bestSolutionString = "No solution found";
+                    } else {
+                        minWeight = graph.getWeight(bestSolution.getValue());
+                        bestSolutionString = bestSolution.getValue().cardinality() + "/" + graph.getNumVertices();
+                    }
 
                     summaries.get(key).add(new Summary(executionTime, minWeight));
 
                     logger.info(
-                            "Solution found for {} with algorithm {}: {} with weight {} in ",
+                            "Solution found for {} with algorithm {}: {} vertices with weight {}",
                             filePath,
                             algorithmName,
-                            bestSolution,
+                            bestSolutionString,
                             minWeight);
                 }
             }
         }
         executor.shutdown();
-        generateSummaryFile();
 
-    }
+        // Create a map to group the summaries by algorithm and file
+        Map<String, Map<String, List<Summary>>> groupedSummaries = new HashMap<>();
+        for (Map.Entry<String, List<Summary>> entry : summaries.entrySet()) {
+            // Split the key into algorithm and file
+            String[] parts = entry.getKey().split("-");
+            String algorithm = parts[0];
+            String file = parts[1];
+            // Add the summaries to the map
+            groupedSummaries.putIfAbsent(file, new HashMap<>());
+            groupedSummaries.get(file).put(algorithm, entry.getValue());
+        }
 
-
-    private void generateSummaryFile() {
         // Get the current time in milliseconds
         long startTime = System.currentTimeMillis();
         // Convert the current time to an Instant
@@ -184,34 +275,32 @@ public class Benchmark {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss").withZone(
                 ZoneId.systemDefault());
         // Create the file name
-        String fileName = "out/benchmark_summary_" + formatter.format(instant) + ".txt";
+        String fileName = "out/benchmark_summary_" + formatter.format(instant);
+
+        generateSummaryFile(fileName, groupedSummaries);
+        generateCSVFile(fileName, groupedSummaries);
+
+    }
+
+
+    private void generateSummaryFile(String fileName, Map<String, Map<String, List<Summary>>> groupedSummaries) {
+        fileName = fileName + ".txt";
         // Create a Path object from the file name
         Path path = Paths.get(fileName);
         try {
             // Create the directories for the file
             Files.createDirectories(path.getParent());
-            try (PrintWriter writer = new PrintWriter(new File(fileName))) {
-                // Create a map to group the summaries by algorithm and file
-                Map<String, Map<String, List<Summary>>> groupedSummaries = new HashMap<>();
-                for (Map.Entry<String, List<Summary>> entry : summaries.entrySet()) {
-                    // Split the key into algorithm and file
-                    String[] parts = entry.getKey().split("-");
-                    String algorithm = parts[0];
-                    String file = parts[1];
-                    // Add the summaries to the map
-                    groupedSummaries.putIfAbsent(algorithm, new HashMap<>());
-                    groupedSummaries.get(algorithm).put(file, entry.getValue());
-                }
+            try (PrintWriter writer = new PrintWriter(fileName)) {
 
                 // Write the summaries to the file
-                for (Map.Entry<String, Map<String, List<Summary>>> algorithmEntry : groupedSummaries.entrySet()) {
-                    // Write the name of the algorithm to the file
-                    writer.println("Algorithm: " + algorithmEntry.getKey());
+                for (Map.Entry<String, Map<String, List<Summary>>> fileEntry : groupedSummaries.entrySet()) {
+                    // Write the name of the file to the file
+                    writer.println("File: " + fileEntry.getKey());
 
-                    // Iterate over each file entry in the algorithm's map
-                    for (Map.Entry<String, List<Summary>> fileEntry : algorithmEntry.getValue().entrySet()) {
+                    // Iterate over each file entry in the file's map
+                    for (Map.Entry<String, List<Summary>> algorithmEntry : fileEntry.getValue().entrySet()) {
                         // Get the list of summaries for the file
-                        List<Summary> summaryList = fileEntry.getValue();
+                        List<Summary> summaryList = algorithmEntry.getValue();
 
                         // Calculate the mean execution time for the summaries
                         double meanTime = summaryList.stream().mapToLong(Summary::getExecutionTime).average().orElse(
@@ -234,7 +323,7 @@ public class Benchmark {
                         int maxWeightCount = (int) summaryList.stream().filter(s -> s.getWeight() == maxWeight).count();
 
                         // Write the file name to the file
-                        writer.println("\tFile: " + fileEntry.getKey());
+                        writer.println("\tAlgorithm: " + algorithmEntry.getKey());
 
                         // Write the mean and standard deviation of the execution time to the file
                         writer.println(
@@ -242,7 +331,7 @@ public class Benchmark {
 
                         // Write the mean, minimum, and maximum weight to the file
                         writer.println("\tWeight:");
-                        int optimalWeight = TestFileDatabase.getExpectedResult(fileEntry.getKey());
+                        int optimalWeight = TestFileDatabase.getExpectedResult(algorithmEntry.getKey());
                         if (optimalWeight != Integer.MAX_VALUE) {
                             writer.println("\t\toptimal value:\t" + optimalWeight);
                         } else {
@@ -262,6 +351,65 @@ public class Benchmark {
                 System.exit(1);
             }
         } catch (IOException e) {
+            logger.error(e);
+            System.exit(1);
+        }
+    }
+
+    private void generateCSVFile(String fileName, Map<String, Map<String, List<Summary>>> groupedSummaries) {
+        int partsPerAlgorithm = 5;
+
+        fileName = fileName + ".csv";
+        Path path = Paths.get(fileName);
+        NumberFormat nf = NumberFormat.getNumberInstance(Locale.ENGLISH);
+        nf.setMaximumFractionDigits(3);
+        nf.setGroupingUsed(false);
+        DecimalFormat df = (DecimalFormat) nf;
+        try {
+            Files.createDirectories(path.getParent());
+            try (PrintWriter writer = new PrintWriter(fileName)) {
+                String[] headerParts = new String[partsPerAlgorithm * algorithms.size() + 1];
+                headerParts[0] = "File";
+                for (int i = 0; i < algorithms.size(); i++) {
+                    String algorithmName = algorithms.get(i).initialize(0, 0).getClass().getSimpleName();
+                    headerParts[i * partsPerAlgorithm + 1] = algorithmName + "Mean Execution Time";
+                    headerParts[i * partsPerAlgorithm + 2] = algorithmName + "Execution Time StdDev";
+                    headerParts[i * partsPerAlgorithm + 3] = algorithmName + "Mean Weight";
+                    headerParts[i * partsPerAlgorithm + 4] = algorithmName + "Min Weight";
+                    headerParts[i * partsPerAlgorithm + 5] = algorithmName + "Max Weight";
+                }
+                writer.println(
+                        String.join(",", headerParts));
+                for (Map.Entry<String, Map<String, List<Summary>>> fileEntry : groupedSummaries.entrySet()) {
+                    String[] parts = new String[partsPerAlgorithm * algorithms.size() + 1];
+                    int algorithmIndex = 0;
+                    for (Map.Entry<String, List<Summary>> algorithmEntry : fileEntry.getValue().entrySet()) {
+                        parts[0] = fileEntry.getKey();
+                        List<Summary> summaryList = algorithmEntry.getValue();
+                        double meanTime = summaryList.stream().mapToLong(Summary::getExecutionTime).average().orElse(
+                                0.0);
+                        double stdDevTime = Math.sqrt(summaryList.stream().mapToDouble(
+                                s -> ((s.getExecutionTime() - meanTime) * (s.getExecutionTime() - meanTime))).average().orElse(
+                                0.0));
+                        int minWeight = summaryList.stream().mapToInt(Summary::getWeight).min().orElse(0);
+                        double meanWeight = summaryList.stream().mapToInt(Summary::getWeight).average().orElse(0.0);
+                        int maxWeight = summaryList.stream().mapToInt(Summary::getWeight).max().orElse(0);
+
+                        parts[algorithmIndex * partsPerAlgorithm + 1] = df.format(meanTime);
+                        parts[algorithmIndex * partsPerAlgorithm + 2] = df.format(stdDevTime);
+                        parts[algorithmIndex * partsPerAlgorithm + 3] = df.format(meanWeight);
+                        parts[algorithmIndex * partsPerAlgorithm + 4] = df.format(minWeight);
+                        parts[algorithmIndex * partsPerAlgorithm + 5] = df.format(maxWeight);
+                        algorithmIndex++;
+                    }
+                    writer.println(String.join(",", parts));
+                }
+            } catch (FileNotFoundException e) {
+                logger.error(e);
+                System.exit(1);
+            }
+        } catch (
+                IOException e) {
             logger.error(e);
             System.exit(1);
         }

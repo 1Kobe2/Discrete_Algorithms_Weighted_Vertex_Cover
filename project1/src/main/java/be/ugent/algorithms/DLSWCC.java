@@ -2,11 +2,15 @@ package be.ugent.algorithms;
 
 import be.ugent.benchmark.IntermediateSolutionReporter;
 import be.ugent.graphs.BasicGraph;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.BitSet;
 import java.util.List;
 
 public class DLSWCC implements WeightedVertexCoverAlgorithm {
+    private static final Logger logger = LogManager.getLogger(DLSWCC.class);
+
     private final int maxIterations;    //maximum amount of iterations
     private BasicGraph graph;           //BasicGraph representation of current graph file
     private int numVertices;            //number of vertices in current graph
@@ -164,5 +168,11 @@ public class DLSWCC implements WeightedVertexCoverAlgorithm {
             }
             vertexScores[i] += add;
         }
+    }
+
+    public static void main(String[] args) {
+        DLSWCC dls = new DLSWCC();
+        BasicGraph graph = new BasicGraph("customgraphs/triangle-4.cwg");
+        BitSet cover = dls.calculateMinVertexCover(graph, null);
     }
 }

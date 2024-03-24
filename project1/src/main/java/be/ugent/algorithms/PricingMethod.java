@@ -33,7 +33,7 @@ public class PricingMethod implements WeightedVertexCoverAlgorithm {
     }
 
     private int getVertexPrice(int u, int[][] edgePrices) {
-        return Arrays.stream(edgePrices[u]).sum();
+        return vertexPrices[u];
     }
 
     private void setEdgePrice(int u, int v, int[][] edgePrices, int price) {
@@ -48,7 +48,7 @@ public class PricingMethod implements WeightedVertexCoverAlgorithm {
         for (int i = 0; i < graph.getNumVertices(); i++) {
             boolean iIsTight = this.isTight(i, edgePrices, graph);
             if (!iIsTight) {
-                for (int j = 0; j < graph.getNumVertices(); j++) {
+                for (int j = i; j < graph.getNumVertices(); j++) {
                     if (i != j) {
                         boolean jIsTight = this.isTight(j, edgePrices, graph);
                         if (!jIsTight) {
@@ -108,7 +108,8 @@ public class PricingMethod implements WeightedVertexCoverAlgorithm {
             }
 
             this.setEdgePrice(u, v, edgePrices, price);
-            intermediateSolutionReporter.solutionCallback(vertexCover);
+            if (intermediateSolutionReporter != null)
+                intermediateSolutionReporter.solutionCallback(vertexCover);
             nonTightVertices = this.getFirstNonTightVertexPair(edgePrices, graph);
         }
 
@@ -117,7 +118,7 @@ public class PricingMethod implements WeightedVertexCoverAlgorithm {
 
     public static void main(String[] args) {
         PricingMethod pricingMethod = new PricingMethod();
-        BasicGraph graph = new BasicGraph("customgraphs/square-5.cwg");
+        BasicGraph graph = new BasicGraph("customgraphs/graph_20000_0.005.cwg");
 
         BitSet vertexCover = pricingMethod.calculateMinVertexCover(graph, null);
         logger.info("Vertex cover: " + vertexCover);

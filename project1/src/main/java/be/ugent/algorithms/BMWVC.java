@@ -78,8 +78,8 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
                 }
 
                 if (graph.getWeight(vi) + graph.getWeight(vj) <= graph.getWeight(commonBitSet)) {
-                    printBitSet(commonBitSet, graph);
-                    System.out.println(vi + ", " + vj);
+//                    printBitSet(commonBitSet, graph);
+//                    System.out.println(vi + ", " + vj);
                     v[0] = vi;
                     v[1] = vj;
                     return v;
@@ -198,10 +198,11 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
     }
 
     private void growDisjointed(int vertex, BitSet disjoint, BasicGraph graph, BitSet visited) {
+        BitSet adjecency = graph.getAdjacencyBitSet(vertex);
         disjoint.set(vertex);
         visited.set(vertex);
-        for (int i = 0; i < graph.getNumVertices(); i++) {
-            if (graph.getAdjacencyBitSet(vertex).get(i) && !visited.get(i)) {
+        for (int i = adjecency.nextSetBit(0); i >= 0; i = adjecency.nextSetBit(i + 1)) {
+            if (!visited.get(i)) {
                 growDisjointed(i, disjoint, graph, visited);
             }
         }
@@ -294,13 +295,12 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
 
         BitSet S = reduce(graph);
 
-        System.out.println("Reduced graph by: " + removed_nodes.size() + " nodes");
-        // System.out.print("[");
-        // for (int node : removed_nodes) {
-        // System.out.print(node + ", ");
-        // }
-        // System.out.println("]");
-        // printBitSet(S, graph);
+//        System.out.println("Reduced graph by: " + removed_nodes.size() + " nodes");
+//        System.out.print("[");
+//        for (int node : removed_nodes) {
+//            System.out.print(node + ", ");
+//        }
+//        System.out.println("]");// printBitSet(S, graph);
 
         ArrayList<BitSet> disjointed = findDisjointed(graph);
         // Remember full graph
@@ -319,10 +319,10 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
                 }
             }
             BitSet set = search(disjoint, Si, subGraph);
-            System.out.print("Solution for graph: ");
-            printBitSet(subGraph, graph);
-            System.out.print(": ");
-            printBitSet(set, graph);
+//            System.out.print("Solution for graph: ");
+//            printBitSet(subGraph, graph);
+//            System.out.print(": ");
+//            printBitSet(set, graph);
             S.or(set);
             removed_nodes = new HashSet<>();
             removed_nodes.addAll(nodesRemovedThroughReduction);
@@ -332,7 +332,7 @@ public class BMWVC implements WeightedVertexCoverAlgorithm {
     }
 
     public static void main(String[] args) {
-        BasicGraph graph = new BasicGraph("customgraphs/graph_100_0.05.cwg");
+        BasicGraph graph = new BasicGraph("customgraphs/graph_200_0.05.cwg");
         BMWVC bmwvc = new BMWVC();
         BitSet cover = bmwvc.calculateMinVertexCover(graph.copy(), null);
         System.out.print("[");
